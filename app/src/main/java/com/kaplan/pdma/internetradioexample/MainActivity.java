@@ -12,9 +12,13 @@ import android.widget.Toast;
 
 import java.io.IOException;
 
+import wseemann.media.FFmpegMediaPlayer;
+
 public class MainActivity extends AppCompatActivity {
 
-    private MediaPlayer player;
+    //    private MediaPlayer player;
+    //uses https://github.com/wseemann/FFmpegMediaPlayer
+    private FFmpegMediaPlayer player;
     private ProgressDialog mProgressDialog;
 
     @Override
@@ -22,7 +26,8 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        player = new MediaPlayer();
+//        player = new MediaPlayer();
+        player = new FFmpegMediaPlayer();
         String url = "http://mediacorp.rastream.com/950fm";
         Uri uri = Uri.parse(url);
         player.setAudioStreamType(AudioManager.STREAM_MUSIC);
@@ -32,13 +37,26 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(this, "Could not set data source", Toast.LENGTH_SHORT).show();
         }
 
-        player.prepareAsync();
-        showProgressDialog();
 
-        player.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+
+//        player.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+//            @Override
+//            public void onPrepared(MediaPlayer mediaPlayer) {
+//                hideProgressDialog();
+//            }
+//        });
+        player.setOnPreparedListener(new FFmpegMediaPlayer.OnPreparedListener() {
             @Override
-            public void onPrepared(MediaPlayer mediaPlayer) {
+            public void onPrepared(FFmpegMediaPlayer mp) {
                 hideProgressDialog();
+            }
+        });
+        player.setOnErrorListener(new FFmpegMediaPlayer.OnErrorListener() {
+
+            @Override
+            public boolean onError(FFmpegMediaPlayer mp, int what, int extra) {
+                mp.release();
+                return false;
             }
         });
 
@@ -47,7 +65,7 @@ public class MainActivity extends AppCompatActivity {
         class95.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if(player.isPlaying()) {
+                if (player.isPlaying()) {
                     player.pause();
                 } else {
                     player.start();
@@ -55,6 +73,10 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+
+
+        player.prepareAsync();
+        showProgressDialog();
     }
 
 
@@ -72,5 +94,11 @@ public class MainActivity extends AppCompatActivity {
         if (mProgressDialog != null && mProgressDialog.isShowing()) {
             mProgressDialog.dismiss();
         }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        player.pause();
     }
 }
